@@ -1,8 +1,8 @@
-from utils import *
-from Graph import Graph
-from variables import variables
-from param_rearranger import param_rearranger
-from ensemble_ops import ensemble_ops
+from ..lib import *
+from ..graphs.Graph import Graph
+from ..graphs.variables import variables
+from ..algorithms.param_rearranger import param_rearranger
+from ..algorithms.ensemble_ops import ensemble_ops
 
 class Undirected_Graph(Graph, variables, param_rearranger, ensemble_ops):
     def __init__(self, **kwargs):
@@ -25,7 +25,6 @@ class Undirected_Graph(Graph, variables, param_rearranger, ensemble_ops):
     def sparse_ndarr_net_meas(self, meas = "deg"):
         # use csr_matrix ONLY for observed network
         # use np.array for the pmatrix
-        from scipy.sparse import issparse
         if meas == "deg":
             if self.kind == "obs":
                 return self.zl_bin_adj.sum(axis = 1).astype(int) #.A1 only if bin_adj is a csr_matrix

@@ -1,4 +1,4 @@
-from dependencies import *
+from ..utils.helpers import *
 from plot_rec_deg_netmeas import *
 from utils import set_name_for_plots
 
@@ -97,7 +97,7 @@ def expected_confusion_matrix(true_mat, sum_model):
 	return sum_model_cm / tot_pairs
 
 def plot_cm_roc_prc(obs_net, sum_model, ref_model, suptitle = "", save = False):
-	from dependencies import cmap
+	from ..utils.helpers import cmap
     
 	plot_full_path = f"{sum_model.plots_dir}/cm_roc_prc/level{sum_model.level:g}.pdf"
 	if not os.path.exists(plot_full_path):

@@ -1,9 +1,9 @@
-from dependencies import *
-from Graph import *
-from Undirected_Graph import *
-from top2bot2top import top2bot2top
-from param_rearranger import param_rearranger
-from minimizers import *
+from ..lib import *
+from ..graphs.Graph import Graph
+from ..graphs.Undirected_Graph import Undirected_Graph
+from ..algorithms.top2bot2top import top2bot2top
+from ..algorithms.param_rearranger import param_rearranger
+from ..algorithms.minimizers import minimizers
 from utils import rel_err
 
 class Undirected_MSM(Undirected_Graph, Graph, top2bot2top, param_rearranger, minimizers):

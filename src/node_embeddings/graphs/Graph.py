@@ -1,7 +1,7 @@
-from dependencies import *
-from variables import variables
-from directed_variables import directed_variables
-from utils import load_array
+from ..lib import *
+from ..graphs.variables import variables
+from ..utils.helpers import load_array
+
 class Graph():
 
     def __init__(self, **kwargs):
@@ -18,15 +18,7 @@ class Graph():
             self.__dict__.update(kwargs)
 
         elif kwargs["dataset_name"].lower().endswith("directed"):
-            directed_variables.__init__(self)
-
-            # add un underscored in the keys of dict if also present in restricted_var (and not already have it)
-            restricted_var = [var for var in directed_variables.__dict__.keys() if not var.startswith("_")]
-            restrict_und = lambda x: "_" if x in restricted_var and not x.startswith("_") else ""
-            kwargs = {restrict_und(k) + k: v for k,v in kwargs.items()}
-
-            # update the __dict__ with the kwargs with underscore
-            self.__dict__.update(kwargs)
+            print('-No implementation for the directed graph',)
 
         self._set_model_plots_dirs()
         self.kind = "obs" if self.name.endswith(("ING", "Gleditsch", "net")) or self.name.startswith("graph_") else "exp"

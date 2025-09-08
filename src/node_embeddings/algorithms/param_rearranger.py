@@ -1,5 +1,5 @@
-from dependencies import *
-from utils import to_tensor
+from ..lib import *
+from ..utils.helpers import to_tensor
 
 class param_rearranger():
     def __init__():

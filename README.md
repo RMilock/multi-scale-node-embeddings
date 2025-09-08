@@ -5,7 +5,7 @@ This package contains a set of methods to calculate:
 1) Renormalizable Vector Embeddings, if the full adjacency matrix is known.
 See "Multi-Scale Node Embeddings for Graph Modeling and Generation" [arXiv](https://arxiv.org/abs/2412.04354);
 
-2) Global or local scalar embeddings, if only marginal quantities are available, such as the number of links or the node degrees. See "Renormalizable graph embeddings for multi-scale network reconstruction" (stay tuned)
+2) Global or local scalar embeddings, if only marginal quantities are available, such as the number of links or the node degrees. See "Renormalizable graph embeddings for multi-scale network reconstruction" [arxiv](https://arxiv.org/abs/2508.20706)
 
 Feel free to reach out at [riccardo.milocco@imtlucca.it](mailto:riccardo.milocco@imtlucca.it) or [riccardo.milocco@gmail.com](mailto:riccardo.milocco@gmail.com), for code refinement, feedback, or collaborations.
 

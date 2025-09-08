@@ -1,4 +1,4 @@
-from dependencies import *
+from ..utils.helpers import *
 from utils import *
 
 class top2bot2top():

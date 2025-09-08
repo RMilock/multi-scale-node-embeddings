@@ -1,4 +1,4 @@
-from dependencies import *
+from ..lib import *
 
 class minimizers():
     def __init__():

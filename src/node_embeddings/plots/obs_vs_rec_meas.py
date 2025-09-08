@@ -12,7 +12,7 @@ def _compute_hist2d(x, y, bins = 30):
 
 def _inset_pmatrix(ax, H, xedges, yedges, width=2, height=2, bbox_to_anchor = (.67, .05), axis_scales = "linear", title = ""):    
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-    from dependencies import cmap
+    from ..utils.helpers import cmap
 
     # inset plot
     # Note: bbox_to_anchor = (x, y) fix the position of the upper left corner of the inset axis --> width and height will provide the size of the inset axis
@@ -409,7 +409,7 @@ def inset_plot_rec_meas(ax, dict_meas, dict_meas2 = None, dict_err = None, dict_
     2) ``(exp_netmeas, exp_deg) VS (obs_netmeas, obs_deg)'': use dict_meas, dict_meas2 and dict_err, dict_err2 (confidence is provided iff dict_err != None).
     
     """
-    from dependencies import sum_model_color, ref_model_color
+    from ..utils.helpers import sum_model_color, ref_model_color
     
     # set errors = 0 not to have errorbars
     err_obs_meas, err_meas2, err_meas3, err_meas4, err_meas5, err_meas6 = np.array([0]*6)

@@ -1,14 +1,4 @@
-from dependencies import *
-def n_possible_part(n, n_inner_cl):
-	"""
-	Number of possible partitions if we start coarse-graining at random n nodes (at level 0) into communities of n_inner_cl nodes each
-	"""
-
-	from math import modf
-	log_n, log_b = jnp.log(n), jnp.log(n_inner_cl)
-	fr_ , int_ = modf(log_n / log_b)
-	lo_clust = clust_labels.size - n_inner_cl**int_
-	return int_, fr_, lo_clust
+from ..lib import *
 
 def uu_fun(arr):
 	# unique values of arr in order of appearance
