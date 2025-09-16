@@ -6,7 +6,7 @@ class Graph():
 
     def __init__(self, **kwargs):
         
-        if kwargs["dataset_name"].lower().endswith("undirected"):
+        if kwargs["direction"].lower().endswith("undirected"):
             variables.__init__(self)
 
             # add un underscored in the keys of dict if also present in restricted_var
@@ -17,7 +17,7 @@ class Graph():
             # update the __dict__ with the kwargs with underscore
             self.__dict__.update(kwargs)
 
-        elif kwargs["dataset_name"].lower().endswith("directed"):
+        elif kwargs["direction"].lower().endswith("directed"):
             print('-No implementation for the directed graph',)
 
         self._set_model_plots_dirs()
@@ -39,7 +39,7 @@ class Graph():
         str_model_params = ""
         if self.get("dimX"): 
             str_model_params = f"/dimX{self.dimX}"
-        if self.name.endswith("LPCA") and self.dataset_name.endswith("Undirected"): 
+        if self.name.endswith("LPCA") and self.dataset_direction.endswith("Undirected"): 
             str_model_params = f"/dimB{self.dimB}/dimC{self.dimC}"
 
         # set the cg_method
@@ -49,14 +49,7 @@ class Graph():
             if "ensemble" in self.model_dir:
                 self.plots_dir = os.path.dirname(os.path.dirname(self.model_dir)) + f"/plots/{self.name}{str_model_params}/{cg_meth_init_guess}"
         else:
-            # base_dir = f"../outputs"
-            base_dir = os.path.expanduser('~') + "/Documents/code_local_files/outputs"
-            if self.get("corpkey"):
-                base_dir = f"../../data/corealgos/rmilocco/outputs"
-            base_dir += f'/datasets/{self.dataset_name}'
-            # coarse grained method + initial condition path
             
-            if self.id_code == "naics_code": self.cg_method = "naics"
             if self.get("cg_method") == None: self.cg_method = "random"
             
             # from now the infos are used only for the models, i.e. kind = "exp"
@@ -67,25 +60,9 @@ class Graph():
             # create objective label if self.objective exists
             objective = self.objective + "/" if self.get("objective") else ""
             
-            # for fine-graining, define a top_level_dir (fixing the top_level to be fractiones)
-            top_level_dir = f"/top_level{self.top_level}" if self.get("top_level") else ""
-
-            # for fine-graining with stripes, define the stripes_level_dir (at least top_level + 1)
-            stripes_level_dir = f"/stripes_level{self.stripes_level}" if self.get("stripes_level") else ""
-
             # create the model_dir and plots_dir where to properly store the data
-            self.model_dir = base_dir + f"/vars/{self.name}{str_model_params}/{cg_meth_init_guess}{top_level_dir}{stripes_level_dir}/level{self.level:g}"
-            self.plots_dir = base_dir + f"/plots/{objective}{self.name}{str_model_params}/{cg_meth_init_guess}{top_level_dir}{stripes_level_dir}"
-
-            # define a split directory for the train and test sets
-            if self.get("n_splits"):
-                if self.get("n_splits") > 1:
-                    # the train and test procedure will be used only to estimate the ``best D''. Then, the whole network will be embedded
-                    # we want to obtain level0/n_splits_.../KFold_mode/balan_loss/dimX.../initial_guess
-                    split_specs = f"/n_splits_{self.n_splits}/{self.KFold_mode}/{self.balan_loss}"
-                    add_cg_meth_init_guess = f"/{cg_meth_init_guess}" if self.get("initial_guess") else ""
-                    self.model_dir = base_dir + f"/vars/{self.name}/level{self.level:g}{split_specs}{str_model_params}{add_cg_meth_init_guess}"
-                    self.plots_dir = self.model_dir.replace('vars/', f'plots/{objective}')
+            self.model_dir = f"./outputs/vars/{self.name}{str_model_params}/{cg_meth_init_guess}/level{self.level:g}"
+            self.plots_dir = f"./outputs/plots/{objective}{self.name}{str_model_params}/{cg_meth_init_guess}"
 
             # create the multi_models directory: join the path before "objective" + "/multi_models"
             self.plots_dir_multi_models = "".join(self.plots_dir.partition(str(self.get("objective")))[:2]) + "/multi_models"
@@ -151,13 +128,13 @@ class Graph():
         if isinstance(pdf, type(None)):
             pdf = self.pdtrans
         
-        if self.dataset_name.lower().startswith("Gleditsch"):
-            if not os.path.exists(self.model_dir + f"/gdp.csv"):
+        if "Gleditsch" in self.dataset_name:
+            if not os.path.exists(self.model_dir + f"/node_gdp.csv"):
                 # create summed gdp
-                gdp = load_array(os.path.expanduser('~') + "/Documents/code_local_files/datasets/Gleditsch-2000-Directed/gdp.csv")
+                gdp = load_array(f"./data/{self.dataset_name}/node_gdp.csv")
                 self.gdp = np.array([sum(gdp[self.mic2mac_int == lab]) for lab in range(self.n_nodes)])
 
-                np.savetxt(self.model_dir + f"/gdp.csv", self.gdp, delimiter=",")
+                np.savetxt(self.model_dir + f"/node_gdp.csv", self.gdp, delimiter=",")
             
         # n_of_self_loops
         mask_self_loops = pdf[f'payer_{self.id_code}'].eq(pdf[f'beneficiary_{self.id_code}'])
@@ -169,7 +146,7 @@ class Graph():
         # n_of_edges = undirected number of links for undirected and directed ones for directed networks
         self.n_edges = pdf.shape[0] - self.n_self_loops
 
-        if self.dataset_name.lower().endswith("undirected"):
+        if "undirected" in self.direction.lower():
             # def. "->"" as "needs" 
             # self.deg -> self.load_or_create -> zl_bin_adj -> create_wei_bin_adj -> map_idcode2int and self.pdtrans
             # maybe it would be better to do it as in the "directed case" to avoid the need of the zl_bin_adj
@@ -184,7 +161,7 @@ class Graph():
             # self.n_fd_nodes = self.fd_nodes.size
             self.n_fcfd_nodes = self.fc_nodes.size + self.fd_nodes.size
         
-        elif self.dataset_name.lower().endswith("directed"):
+        elif "directed" in self.direction.lower():
 
             # obtain deg_out and deg_in
             # self.deg_sseq(pdf)
@@ -429,7 +406,7 @@ class Graph():
                    
         # if the path doesnt exists or we want to force saving the variable
         elif not os.path.exists(file_path_full) or save:
-            if self.dataset_name.lower().endswith("undirected"):
+            if "undirected" in self.dataset_name.lower():
                 dict_of_fun = {
                     "wei_adj" : lambda x: self.create_wei_bin_adj() if x else 0,
                     "bin_adj" : lambda x: self.create_wei_bin_adj() if x else 0, # x = self.weigh_adj
@@ -443,7 +420,7 @@ class Graph():
                     "w": lambda x: self.w if x else 0,
                     "delta" : lambda x: self.delta if x else 0,
                     }
-            elif self.dataset_name.lower().endswith("directed"):
+            elif "directed" in self.dataset_name.lower():
                 dict_of_fun = {
                     "wei_adj" : lambda x: self.create_wei_bin_adj() if x else 0,
                     "bin_adj" : lambda x: self.create_wei_bin_adj() if x else 0, # x = self.weigh_adj
@@ -493,8 +470,8 @@ class Graph():
         if not os.path.exists(path) or force_save:
             if format_ == "npz":
                 save_npz(path, var)
-            elif format_ == "pt":
-                tc.save(var, path)
+            # elif format_ == "pt":
+            #     tc.save(var, path)
             elif format_ == "csv":
                 fmt='%i'
                 if np.any(var % 1.):
@@ -561,7 +538,7 @@ class Graph():
         Otherwise, one has to map it
         '''
         from pickle import load, dump
-        from utils import uu_fun
+        from ..utils.helpers import uu_fun
 
         from os.path import dirname
         dir_path = dirname(obs_net.model_dir)+'/isource_2_itarget'

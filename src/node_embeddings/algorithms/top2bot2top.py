@@ -1,5 +1,4 @@
 from ..utils.helpers import *
-from utils import *
 
 class top2bot2top():
     def __init__():
@@ -73,15 +72,6 @@ class top2bot2top():
         '''
         if self.level == top_level:
             return np.arange(self.n_nodes)
-        
-        self.top_lab_bot_lab = self.isource_2_itarget(lsour = self.top_l, ltar = self.level)
-
-        # repetition of the top_lab for indexes of the members
-        rep_top_labels = np.zeros(self.n_nodes, dtype = int)
-        for top_lab in np.arange(top_n_nodes):
-            rep_top_labels[self.top_lab_bot_lab[top_lab]] = top_lab
-        
-        return rep_top_labels
 
     def cg_labels_l(self, l):
         '''
@@ -91,5 +81,3 @@ class top2bot2top():
         if self.level == 0:
             self._import_funcs_labels_deg() #cgl0_l = lambda l: np.genfromtxt(self.Gleditsch_dirl(l)+"/Gleditsch.cg_labels.csv", dtype = int)
             return self.cgl0_l(l)
-        else:
-            return self.cglhigh_l(l)       

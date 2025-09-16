@@ -4,7 +4,7 @@ from ..graphs.Undirected_Graph import Undirected_Graph
 from ..algorithms.top2bot2top import top2bot2top
 from ..algorithms.param_rearranger import param_rearranger
 from ..algorithms.minimizers import minimizers
-from utils import rel_err
+from ..utils.helpers import rel_err
 
 class Undirected_MSM(Undirected_Graph, Graph, top2bot2top, param_rearranger, minimizers):
     
@@ -16,7 +16,6 @@ class Undirected_MSM(Undirected_Graph, Graph, top2bot2top, param_rearranger, min
                     "id_code" : obs_net.id_code, # decide if naics_code pipeline or grid_id one
                     "pdtrans" : obs_net.pdtrans,
                     "year" : obs_net.year,
-                    "corpkey" : obs_net.corpkey, # to decide which folder to save or other stuff
                     "cg_method" : obs_net.cg_method,
                     "map_idcode2int" : obs_net.map_idcode2int, # convert from pid to idx, i.e. nodes 0,1,2.=,...
                     "obs_deg" : obs_net.deg,
@@ -30,9 +29,7 @@ class Undirected_MSM(Undirected_Graph, Graph, top2bot2top, param_rearranger, min
         Undirected_Graph.__init__(self, **kwargs)
 
         # set the variable of the observed graph excluded from the prev update
-        self.__dict__.update(
-            {"_n_nodes" : obs_net.n_nodes,
-            })
+        self.__dict__.update({"_n_nodes" : obs_net.n_nodes,})
 
         self._n_params_X = None
         self._pmatrix = None
@@ -65,8 +62,6 @@ class Undirected_MSM(Undirected_Graph, Graph, top2bot2top, param_rearranger, min
             if not os.path.exists(self.model_dir + "/reduced_by.txt"):
                 # np.save(, self.reduced_by)
                 open(self.model_dir + "/reduced_by.txt", "w").write(str(self.reduced_by))
-
-        self.dimBCX = self.dimB + self.dimC if self.name.endswith("LPCA") else self.dimX
 
     def obs_deg_mat(self, obs_net):
         # obtain degree of the super-block
@@ -164,7 +159,6 @@ class Undirected_MSM(Undirected_Graph, Graph, top2bot2top, param_rearranger, min
             # set the self-loops
             if set_w_diag == True:
                 
-                print(f'-Setting the Diagonal to Pmatrix for {self.name}',)
                 # all the nodes don't a self loop
                 # set either the w and the diagonal
                 self.w = np.ones(self.n_nodes)*np.inf

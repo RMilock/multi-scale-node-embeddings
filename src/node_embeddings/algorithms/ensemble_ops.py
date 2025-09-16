@@ -1,6 +1,5 @@
-from ..utils.helpers import *
-from utils import *
-from Undirected_Graph import *
+from ..graphs.Undirected_Graph import *
+from ..utils.helpers import sample_from_p, load_array
 
 class ensemble_ops():
     def __init__():
@@ -65,7 +64,7 @@ class ensemble_ops():
         """
         
         import scipy.stats as st
-        from Undirected_Graph import Undirected_Graph
+        from ..graphs.Undirected_Graph import Undirected_Graph
         
         def find_ens_max_graph_idx(self):
             """

@@ -1,18 +1,13 @@
-from utils import *
+from ..utils.helpers import nodes_from
+from ..lib import *
 
 def default_4_undirected_paper(dataset_name):
     ''' Default values for the first 2 undirected papers'''
     
-    if dataset_name.startswith("Gleditsch"):
+    if "Gleditsch" in dataset_name:
         id_code = "int"
         cg_method = "geo-dist"
         year = 2000
-            
-    elif dataset_name.startswith("ING"):
-        # write here the naics code. If None, it will read the whole dataset with the grid_id names
-        id_code = "naics_code"
-        cg_method = "naics_code"
-        year = 2022
     
     return id_code, cg_method, year
 
@@ -53,39 +48,16 @@ def flip_payer_beneficiary_columns(df):
 	
 	return df
 
-def dataset_loader(name, corpkey = None, dataset_direction = "Undirected", id_code = "naics_code", cg_method = "naics_code", year = 2022, distance_matrix = None, lvl_to_nclust = None, max_n_entries = 0):
+def dataset_loader(name, id_code = None, cg_method = "geo-dist", year = 2000, direction = "Undirected", distance_matrix = None, lvl_to_nclust = None, max_n_entries = 0):
 
     # dataset name year and direction (nyd)
-    dataset_nyd = f"{name}-{dataset_direction}"
+    name_year_direction = f"{name}-{year}-{direction.title()}"
+    dataset_folder = f"./data/" + name_year_direction
 
-    # if on dap, it will execute the try, otherwise if local the read_csv
-    xgrid_time_xtrans_time = "xgrid_20240427_xtrans_20240424" if dataset_direction == "Directed" else "xgrid_20240404_xtrans_20240324"
-    dataset_folder = f"{os.path.expanduser('~')}/Documents/code_local_files/datasets/{dataset_nyd}"
-
-    if dataset_nyd.startswith("Gleditsch"):
+    if "Gleditsch" in dataset_folder:
         pdtrans = pd.read_csv(dataset_folder + "/edges_int_pd.csv")
         print(f"\nReading from local source @ {dataset_folder + '/edges_int_pd.csv'}")
-        
-    elif dataset_nyd.startswith("ING"):
 
-        # select the last two digis of the year
-        last_digits = str(year)[2:]
-        full_path = lambda dataset_folder: f"{dataset_folder}/{xgrid_time_xtrans_time}/pdtrans_no_rotw_gridSelfLoops_52559299_{id_code}.csv"
-        
-        # decide whether to go for COREALGOS directory or LOCAL one based on the corpkey finding
-        if corpkey:
-            dataset_folder = os.path.expanduser('~') + "/data/corealgos/rmilocco"
-            print(f"\nReading from COREALGOS")# @ {full_path(dataset_folder)}")
-
-        else:
-            # the naics_code dataset is sorted (ascending) by payer and beneficiaries
-            print(f"\nReading from local source")
-
-        pdtrans = pd.read_csv(full_path(dataset_folder)).drop(columns=["nrofpayments"])
-
-        if id_code.startswith("grid_id"):
-            pdtrans.drop(["payer_naics_desc", "beneficiary_naics_desc"], axis = 1, inplace = True)
-        
     # COARSE-GRAINING METHODS   
     if cg_method.startswith(("geo-dist", "rand-dist")):
         pdtrans.columns = ["payer_int", "beneficiary_int", 'amount_euro']
@@ -108,31 +80,18 @@ def dataset_loader(name, corpkey = None, dataset_direction = "Undirected", id_co
             distance_matrix = pd.read_csv(dataset_folder + f"/geo_dist.csv", index_col = 0)
         
 
-    elif cg_method.startswith("naics"):
-        # set the total_levels to the numb of times we can cut the last digits of the naics_code, i.e. 5 (6,5,4,3,2)
-        total_levels = len(str(pdtrans[f"payer_naics_code"].iloc[0])) - 1
-
     elif cg_method.startswith("random"):
         total_levels = 1
 
     if max_n_entries > 0:
         pdtrans = pdtrans.iloc[:max_n_entries]
 
-    if dataset_direction == "Directed":
-        # perform a payer_id_code <-> ben_id_code substitution to retain the supply-chain network
-        pdtrans = flip_payer_beneficiary_columns(pdtrans)
-        
-        # sort the values with respect the columns before the ``amount euro''
-        pdtrans = pdtrans.sort_values(by=pdtrans.columns[:-1].to_list())\
-                        .reset_index(drop=True)
-
     kwargs = {
             "name" : name,
-            "dataset_name" : dataset_nyd,
-            # "dataset_direction" : dataset_direction,
+            "dataset_name" : name_year_direction,
+            "direction" : direction,
             "level" : 0,
             "pdtrans" : pdtrans.copy(),
-            "corpkey" : corpkey,
             "id_code" : id_code,
             "year" : year,
             "cg_method" : cg_method, # needed for defining the directory

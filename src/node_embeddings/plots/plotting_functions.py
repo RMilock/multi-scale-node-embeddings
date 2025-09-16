@@ -1,6 +1,9 @@
 from ..utils.helpers import *
-from plot_rec_deg_netmeas import *
-from utils import set_name_for_plots
+from ..lib import *
+from ..plots.obs_vs_rec_meas import *
+from ..utils.helpers import set_name_for_plots
+from ..utils import matplotlib_settings as mpls
+from ..utils.matplotlib_settings import ref_model_ms, ref_model_ms
 
 def plots_rec_bin_vs_deg_cm_roc_prc(obs_net, sum_model, ref_model = None, confidence = 0, n_samples = 100):
 	""" 
@@ -183,8 +186,8 @@ def plot_cm_roc_prc(obs_net, sum_model, ref_model, suptitle = "", save = False):
 		
 		# Plot ROC
 		ax2 = plt.subplot2grid((2, 3), (0, 1), rowspan=2)
-		RocCurveDisplay(fpr=ref_fpr, tpr=ref_tpr).plot(ax2, label = f"{ref_model.plots_name} - area: {auc_roc2:.3}", color = ref_model_color, lw = lw_ref, zorder = zorder)
-		RocCurveDisplay(fpr=sum_fpr, tpr=sum_tpr).plot(ax2, label = f"Summed - area: {auc_roc:.3}", color = sum_model_color, lw = lw_sum, zorder = zorder)
+		RocCurveDisplay(fpr=ref_fpr, tpr=ref_tpr).plot(ax2, label = f"{ref_model.plots_name} - area: {auc_roc2:.3}", color = mpls.ref_model_color, lw = lw_ref, zorder = zorder)
+		RocCurveDisplay(fpr=sum_fpr, tpr=sum_tpr).plot(ax2, label = f"Summed - area: {auc_roc:.3}", color = mpls.sum_model_color, lw = lw_sum, zorder = zorder)
 
 		ax2.plot([0, 1], [0, 1], color = "black", linestyle = "--", label = 'No Skill', zorder = zorder-1)
 
@@ -195,8 +198,8 @@ def plot_cm_roc_prc(obs_net, sum_model, ref_model, suptitle = "", save = False):
 
 		# Plot PR
 		ax3 = plt.subplot2grid((2, 3), (0, 2), rowspan=2)
-		PrecisionRecallDisplay(precision=ref_precision, recall=ref_recall).plot(ax=ax3, label = f"{ref_model.plots_name} - area: {auc_prc2:.3}",  color = ref_model_color, lw = lw_ref, zorder = zorder)
-		PrecisionRecallDisplay(precision=sum_precision, recall=sum_recall).plot(ax=ax3, label = f"Summed - area: {auc_prc:.3}", color = sum_model_color, lw = lw_sum, zorder = zorder)
+		PrecisionRecallDisplay(precision=ref_precision, recall=ref_recall).plot(ax=ax3, label = f"{ref_model.plots_name} - area: {auc_prc2:.3}",  color = mpls.ref_model_color, lw = lw_ref, zorder = zorder)
+		PrecisionRecallDisplay(precision=sum_precision, recall=sum_recall).plot(ax=ax3, label = f"Summed - area: {auc_prc:.3}", color = mpls.sum_model_color, lw = lw_sum, zorder = zorder)
 		
 		# find the minimum to start the PR
 		no_skill = len(y_true[y_true==1]) / len(y_true)
@@ -263,8 +266,6 @@ def clf_sum_model_scores(obs_net, sum_model):
 		columns=("Expected Scores", f"Summed values"),
 	).set_index("Expected Scores")
 
-	save_pd(df, sum_model, table_name = "table_scores")
-
 	return df
 
 def rescale_aic_bic_df(ref_model, models, dims, total_levels, aic_bic_flag = "aic"):
@@ -280,7 +281,7 @@ def rescale_aic_bic_df(ref_model, models, dims, total_levels, aic_bic_flag = "ai
 	"""
 
 	from os.path import dirname as dirname
-	import dataframe_image as dfi 
+	# import dataframe_image as dfi 
 
 	def levels_min_max(models, ravel = False):
 		max2color = []
@@ -375,45 +376,11 @@ def rescale_aic_bic_df(ref_model, models, dims, total_levels, aic_bic_flag = "ai
 				#     dict(selector="caption", props=[("text-align", "center"),("font-size", "150%"),("color", 'black')])])\
 				#.format("{:.3e}")
 
-	plots_dir = dirname(dirname(dirname(ref_model.plots_dir)))
-	full_path = ref_model.plots_dir_multi_models + f"/table_{aic_bic_flag}.pdf" 
-	os.makedirs(ref_model.plots_dir_multi_models, exist_ok = True)
-	dfi.export(
-				styled_df, 
-				full_path, table_conversion="Firefox", 
-				)
-
-	# Optionally, save to a .tex file
-	with open(ref_model.plots_dir_multi_models + f'/table_{aic_bic_flag}.tex', 'w') as f:
-		f.write(styled_df.to_latex())
-
 	return styled_df
-
-def save_pd(df, sum_model, table_name = "pd_table"):
-	import dataframe_image as dfi
-	table_full_path = f"{sum_model.plots_dir}/{table_name}.pdf"
-	try: 
-		df_styled = df.style.set_table_styles([dict(selector='th', props=[('text-align', 'center'),('background-color', 'salmon'),('color', 'black')])])
-		df_styled.set_properties(**{'text-align': 'center'})#.hide(axis='index')
-		pd.set_option('colheader_justify', 'center')
-		dfi.export(df_styled, table_full_path)
-	
-	except:
-		from pandas.plotting import table # EDIT: see deprecation warnings below
-
-		ax = plt.subplot(111, frame_on=False) # no visible frame
-		#plt.figsize = (10,5)
-		ax.xaxis.set_visible(False)  # hide the x axis
-		ax.yaxis.set_visible(False)  # hide the y axis
-
-		my_table = table(ax, df, loc='center', cellLoc = "center", rowLoc = "center", rowColours = ['salmon']*df.shape[0], colColours = ['salmon']*df.shape[0])  # where df is your data frame
-		for cell in my_table.properties()['children']: cell.set_height(0.1)
-		plt.savefig(table_full_path, bbox_inches = "tight")
-		plt.close()
 
 def plot_loss_gradn(self, save = True):
 	seed_str = ""
-	if self__dict__.get('seed') != None: seed_str = f"seed{self__dict__.get('seed'):g}_"
+	if self.__dict__.get('seed') != None: seed_str = f"seed{self.__dict__.get('seed'):g}_"
 	plot_full_path = f"{self.plots_dir}/plot_loss_gradn/level{self.level:g}_{seed_str}plot_loss_gradn.pdf"
 
 	if not os.path.exists(plot_full_path):
@@ -424,11 +391,11 @@ def plot_loss_gradn(self, save = True):
 		labels = [f"Losses", f"Jac Norms"]
 		leg2 = ax2.plot(self.nit_list, self.gradn_list, label = labels[1]+f" - lastv: {self.gradn_list[-1]:.2e}", color = colors[1]);
 		leg1 = ax1.plot(self.nit_list, self.losses_list , label = labels[0]+ f" - lastv: {self.losses_list[-1]:.2e}", color = colors[0], zorder = 1)
-		#leg3 = ax1.plot(self.nit_list, np.array(self.mse_deg_list)*np.max(self.losses_list), color = ref_model_color, label = "mse_deg", zorder = 1)
+		#leg3 = ax1.plot(self.nit_list, np.array(self.mse_deg_list)*np.max(self.losses_list), color = mpls.ref_model_color, label = "mse_deg", zorder = 1)
 
 		idx_nm = [np.where(self.losses_list == loss)[0][0] for loss in self.opt_final_loss]
 		its_nm = [self.nit_list[i] for i in idx_nm]
-		ax1.scatter(its_nm, self.opt_final_loss, marker = "*", s = 13**2, label = "opt_final_loss", color = ref_model_color, zorder = 2)
+		ax1.scatter(its_nm, self.opt_final_loss, marker = "*", s = 13**2, label = "opt_final_loss", color = mpls.ref_model_color, zorder = 2)
 
 		fontsize = 16
 		for i, ax in enumerate([ax1, ax2]):
@@ -440,7 +407,7 @@ def plot_loss_gradn(self, save = True):
 		for xi, yi, text in zip(its_nm, self.opt_final_loss, self.opt_names):
 			ax1.annotate(text, xy=(xi, yi), xycoords='data', xytext=(3, 3), 
 						fontsize = fontsize,
-						textcoords='offset points', color = ref_model_color,)
+						textcoords='offset points', color = mpls.ref_model_color,)
 
 
 		ax1.legend(handles=leg1+leg2, loc="best", fontsize = fontsize)
@@ -455,7 +422,7 @@ def plot_loss_gradn(self, save = True):
 		plt.close()
 
 # plot fitnesses VS GDP
-def plot_grained_fitn(sum_model, ref_model, save_std = False, xscale = "log", yscale = "log", color = sum_model_color):
+def plot_grained_fitn(sum_model, ref_model, save_std = False, xscale = "log", yscale = "log", color = mpls.sum_model_color):
 	if sum_model.name.startswith("fg"):
 		dir_appendix = "fine_vs_fit"
 	else:
@@ -647,8 +614,8 @@ def plot_triangles_at_c(obs_net, ref_model, name_mark_color, n_points, only_summ
 		fig, ax = plt.subplots(figsize = (12,7))
 
 		# plot as first entry the observed triangles
-		ax.scatter(lin_space_c, obs_net.triangle_c, marker = obs_marker, c = obs_color,
-					s = obs_ms // 2, label = f"{obs_net.name}", zorder = len(names_dims)+1)
+		ax.scatter(lin_space_c, obs_net.triangle_c, marker = mpls.obs_marker, c = mpls.obs_color,
+					s = mpls.obs_ms // 2, label = f"{obs_net.name}", zorder = len(names_dims)+1)
 
 		# plot expected numb of triangles for each model
 		for model_name_d in name_mark_color:
@@ -717,7 +684,7 @@ def plot_n_self_loops(obs_net, ref_model, models, dims, colors, markers):
 		plot_exp_n_loops = lambda model_name, str_dimXBC, marker: ax.loglog(n_nodes, exp_n_self_loops("sum-"+model_name, str_dimXBC), marker = marker, linestyle = "dashed", lw = 2, mfc = "None", color = colors[model_name], ms = ms, label = model_name.replace("sum-", "") + f"{str_dimXBC.replace('dimX','-')}")
 		
 		# plot the obs number of self-loops
-		ax.loglog(n_nodes, n_self_loops, 'o', mfc = None, color = obs_color, label = 'Observed')
+		ax.loglog(n_nodes, n_self_loops, 'o', mfc = None, color = mpls.obs_color, label = 'Observed')
 
 		for name, d, marker in zip(models, dims, markers):
 			str_dimXBC = f"dimB{d[0]}/dimC{d[1]}" if name.endswith("LPCA") else f"dimX{d}"
@@ -881,7 +848,7 @@ def plot_auc_roc_prc(obs_net, name_mark_color, ref_model, total_levels = 4, ysca
 		# fig.suptitle('Multiscale normalized ROC and Prec Rec for Summed Models')
 		save_fig(fig, full_path)
 		plt.close()
-	plt.rcParams.update({"font.size" : global_font_size})
+	plt.rcParams.update({"font.size" : mpls.global_font_size})
 
 # Plot Cross Comparison among the models for the Conference Plots
 def plots_dir_(ref_model, n_parents = 2):
@@ -944,7 +911,7 @@ def net_meas_plot(ax, obs_net, ref_model, models, dims, colors, markers, net_mea
 	ref_model must be maxlMSM dimX 1 since we will plot the other coarse-grained models
 	Only maxlMSM and degcMSM are plotted since the other models are not considering the self-loops
 	"""
-	from plot_rec_deg_netmeas import _inset_pmatrix, _compute_hist2d
+	from ..plots.obs_vs_rec_meas import _inset_pmatrix, _compute_hist2d
 	from matplotlib import ticker
 
 
@@ -997,7 +964,7 @@ def net_meas_plot(ax, obs_net, ref_model, models, dims, colors, markers, net_mea
 			exp_meas = strineq_meas(ref_model, name = "sum-"+name, level = obs_net.level, str_dimXBC = str_dimXBC, net_meas=[net_meas], reduced_by=reduced_by)[0]
 		
 		# plot the identity line
-		ax[i].scatter(obs_meas, obs_meas, marker = 'o', s = ms, c = obs_color, label = 'Observed')
+		ax[i].scatter(obs_meas, obs_meas, marker = 'o', s = ms, c = mpls.obs_color, label = 'Observed')
 		
 		# plot the expected VS the observed
 		plot_cc_of_(ax[i], obs_meas, exp_meas, marker, name, d)
@@ -1065,13 +1032,13 @@ def plot_cross_comparison(ref_model, models, dims, markers, colors, levels, kwar
 		else:
 			return model_i
 	
-	from Undirected_Graph import Undirected_Graph
+	from ..graphs.Undirected_Graph import Undirected_Graph
+
 	# define the directory for the plots
 	fig_dir = ref_model.plots_dir_multi_models #plots_dir_(ref_model) + "/multi_models"
 	os.makedirs(fig_dir, exist_ok = True)
 
 	# create a string by joining the models and the dims if models are not LCPA and maxlMSM
-	add_dim_if = lambda i: models[i] + convert_to_string(dims[i]) if models[i].endswith(("LPCA", "maxlMSM")) else models[i]
 	str_models_d = '_'.join([model_dims(i,dims) for i in range(len(models))])
 	path_levels = "".join([str(i) for i in levels])
 	full_path = f'{fig_dir}/cross_comparison/levels{path_levels}/{net_meas.upper()}_{str_models_d}.pdf'
@@ -1137,11 +1104,11 @@ def get_rec_acc_models(obs_net, ref_model, name_mark_color, total_levels, confid
 				
 				# for every model check if it is included in the induced ci
 				for model_name_d in name_mark_color:
-					model_name, d = split_name_dim(model_name_d)
+					model_name, dim = split_name_dim(model_name_d)
 
 					# load the mean and errors (wrt to the mean)
-					str_dimXBC = f"dimB{dim[0]}/dimC{dim[1]}" if name.endswith("LPCA") else f"dimX{dim}"
-					mean, lb_ci, ub_ci = load_meas(ref_model, level, name = model_name, str_dimXBC = str_dimXBC, meas = meas + f"_conf{confidence}", ensemble_avg = True)
+					str_dimXBC = f"dimB{dim[0]}/dimC{dim[1]}" if model_name.endswith("LPCA") else f"dimX{dim}"
+					_, lb_ci, ub_ci = load_meas(ref_model, level, name = model_name, str_dimXBC = str_dimXBC, meas = meas + f"_conf{confidence}", ensemble_avg = True)
 					
 					# create the lower and higher dispersion intervals
 					lbub_ci = np.vstack((lb_ci, ub_ci))
@@ -1167,10 +1134,10 @@ def get_rec_acc_models(obs_net, ref_model, name_mark_color, total_levels, confid
 	return dict_rec_acc
 
 def _plot_inset_pmatrices_in_net_meas(fig, ax, ref_model, name, dim, level, bbox_to_anchor = (1.025, .65)):
-	from plot_rec_deg_netmeas import _inset_pmatrix, _compute_hist2d
+	from ..plots.obs_vs_rec_meas import _inset_pmatrix, _compute_hist2d
 	""" Plot the inset pmatrices in the net_meas by level grid """
 	# select the width of the inner axis, the markersize and the alpha
-	from utils import str_dimXBC_
+	from ..utils.helpers import str_dimXBC_
 	width = 100
 	ms, alpha = 1, 0.3
 
@@ -1246,9 +1213,9 @@ def plots_net_meas_by_level(obs_net, ref_model, levels, name, dim):
 
 				# load the meas from the observed obs_network
 				# i = 0, deg; i = 1, annd; i = 2, cc --> norm_obs[0] = obs deg
-				axs[i,j].scatter(norm_obs[0], norm_obs[i], marker = 'o', color = obs_color, s = obs_ms, label = 'Observed')
-				axs[i,j].scatter(norm_fit[0], norm_fit[i], marker = '+', color = ref_model_color, s = obs_ms, label = f'{set_name_for_plots(name, ref_model)}')
-				axs[i,j].scatter(norm_sum[0], norm_sum[i], marker = 'x', color = sum_model_color, s = obs_ms, label = 'Summed')
+				axs[i,j].scatter(norm_obs[0], norm_obs[i], marker = 'o', color = mpls.obs_color, s = mpls.obs_ms, label = 'Observed')
+				axs[i,j].scatter(norm_fit[0], norm_fit[i], marker = '+', color = mpls.ref_model_color, s = mpls.obs_ms, label = f'{set_name_for_plots(name, ref_model)}')
+				axs[i,j].scatter(norm_sum[0], norm_sum[i], marker = 'x', color = mpls.sum_model_color, s = mpls.obs_ms, label = 'Summed')
 				
 				if j == 0:
 					# add name of measurements for the y-axis only in the first row
@@ -1473,7 +1440,7 @@ def plot_sum_vs_cg_pmatrix(obs_net, ref_model, level, class_models = "fitn_model
 		ref_model.toplab2botlab = ref_model.isource_2_itarget(obs_net, lsour = level, ltar = 0)
 
 		
-		colors = [ref_model_color, sum_model_color]
+		colors = [mpls.ref_model_color, mpls.sum_model_color]
 		dims = [1,1]
 		if class_models == "fitn_models":
 			model_names = ["fitnCM", "fitnMSM"]
@@ -1555,7 +1522,7 @@ def plots_rel_err_n_edges_across_levels(sum_model, name_mark_color, dims, levels
 	names_no_dims = ["-".join(x.split("-")[:-1]) for x in name_mark_color.keys()]
 
 	if not os.path.exists(full_path):
-		from utils import fc_title, str_dimXBC_
+		from ..utils.helpers import fc_title, str_dimXBC_
 
 		lw_ampl = 1.2
 	
@@ -1588,7 +1555,7 @@ def plots_rel_err_n_edges_across_levels(sum_model, name_mark_color, dims, levels
 			# plot the edges
 			marker, color = name_mark_color[sum_name_dim]
 			ax.scatter(levels, n_edges_across_levels * scale,
-						marker=marker, c = color, s = 2 * obs_ms, #fc = "none", , 
+						marker=marker, c = color, s = 2 * mpls.obs_ms, #fc = "none", , 
 						label=_plot_label)
 		
 
@@ -1616,4 +1583,4 @@ def plots_rel_err_n_edges_across_levels(sum_model, name_mark_color, dims, levels
 
 		plt.close()
 
-	plt.rcParams.update({"font.size" : global_font_size})
+	plt.rcParams.update({"font.size" : mpls.global_font_size})

@@ -1,5 +1,6 @@
-from plotting_functions import *
-from utils import *
+from ..lib import *
+from ..utils.matplotlib_settings import cmap
+from ..utils import matplotlib_settings as mpls
 
 def _compute_hist2d(x, y, bins = 30):
     # obtain the 2D density of the pmatrix
@@ -12,8 +13,7 @@ def _compute_hist2d(x, y, bins = 30):
 
 def _inset_pmatrix(ax, H, xedges, yedges, width=2, height=2, bbox_to_anchor = (.67, .05), axis_scales = "linear", title = ""):    
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-    from ..utils.helpers import cmap
-
+    
     # inset plot
     # Note: bbox_to_anchor = (x, y) fix the position of the upper left corner of the inset axis --> width and height will provide the size of the inset axis
     inax = inset_axes(ax, width=width, height=height, loc = "lower left", bbox_to_anchor = bbox_to_anchor, bbox_transform=ax.transAxes)
@@ -44,7 +44,7 @@ def _plot_inset_pmatrices(fig, ax, obs_net, sum_model, ref_model, level = None):
     """
 
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-    from plotting_functions import save_fig 
+    from .plotting_functions import save_fig 
 
     # select the width of the inner axis, the markersize and the alpha
     width = 100
@@ -108,18 +108,18 @@ def ax_scatter_errorbar(ax, meas3, meas4, meas5, meas6, err_meas3, err_meas4, er
     """
 
     if np.array_equiv(err_meas4, 0):
-        ax.scatter(meas3, meas4, marker = ref_model_marker, c = ref_color, s = ref_ms**2, label = ref_label)
-        ax.scatter(meas5, meas6, marker = sum_model_marker, c = sum_color, s = sum_ms**2, label = sum_label)
+        ax.scatter(meas3, meas4, marker = mpls.ref_model_marker, c = ref_color, s = ref_ms**2, label = ref_label)
+        ax.scatter(meas5, meas6, marker = mpls.sum_model_marker, c = sum_color, s = sum_ms**2, label = sum_label)
     else:
         # for + error-bars, uncomment this (comment the other)
         alpha_conf_int = 0.5
-        _, caps, bars = ax.errorbar(meas3, meas4, xerr = err_meas3, yerr = err_meas4, fmt = ref_model_marker, elinewidth = 1, capsize = 3, color = ref_color, markersize = ref_ms, label = ref_label)
+        _, caps, bars = ax.errorbar(meas3, meas4, xerr = err_meas3, yerr = err_meas4, fmt = mpls.ref_model_marker, elinewidth = 1, capsize = 3, color = ref_color, markersize = ref_ms, label = ref_label)
 
         # set the bar and cap to an alpha =  alpha_conf_int
         [bar.set_alpha(alpha_conf_int) for bar in bars]
         [cap.set_alpha(alpha_conf_int) for cap in caps]
         
-        _, caps, bars = ax.errorbar(meas5, meas6, xerr = err_meas5, yerr = err_meas6, fmt = sum_model_marker, elinewidth = 1, capsize = 3, color = sum_color, ms = 1.2*sum_model_ms, label = sum_label)
+        _, caps, bars = ax.errorbar(meas5, meas6, xerr = err_meas5, yerr = err_meas6, fmt = mpls.sum_model_marker, elinewidth = 1, capsize = 3, color = sum_color, ms = 1.2*mpls.sum_model_ms, label = sum_label)
 
         # set the bar and cap to an alpha =  alpha_conf_int
         [bar.set_alpha(alpha_conf_int) for bar in bars]
@@ -154,18 +154,15 @@ def _ccdf_vs_deg(dict_deg):
 
     return ccdf_vs_deg
 
-def inset_plot_ccdf(ax, dict_meas,
-                        obs_color = obs_color, sum_model_color = sum_model_color, ref_model_color = ref_model_color,
-                        obs_net_label = "observed", sum_model_label = "sum_model", ref_model_label = "sum_model",
-                        inset_title = "none",):
+def inset_plot_ccdf(ax, dict_meas, sum_model_label = "sum_model", ref_model_label = "sum_model", inset_title = "none",):
     """Function to plot the ccdf of the observed, sum_model and ref_model"""
     # load in ccdf all the ccdf obtained from dict_meas
     
     lw = 7
     ccdf = _ccdf_vs_deg(dict_meas)
-    ax.step(ccdf["obs"], ccdf["obs_ccdf"], color = obs_color, lw = 7, label = obs_net_label)
-    ax.step(ccdf["ref_model"], ccdf["ref_model_ccdf"], color = ref_model_color, lw = 7, label = ref_model_label)
-    ax.step(ccdf["sum_model"], ccdf["sum_model_ccdf"], color = sum_model_color, lw = 7, label = sum_model_label)
+    ax.step(ccdf["obs"], ccdf["obs_ccdf"], color = mpls.obs_color, lw = 7, label = mpls.obs_net_label)
+    ax.step(ccdf["ref_model"], ccdf["ref_model_ccdf"], color = mpls.ref_model_color, lw = 7, label = ref_model_label)
+    ax.step(ccdf["sum_model"], ccdf["sum_model_ccdf"], color = mpls.sum_model_color, lw = 7, label = sum_model_label)
 
     ax.set(ylabel=f'CCDF', xlabel= 'DEG', title=f'{inset_title}', xscale = "log", yscale= "linear")
     ax.legend(loc = 0)
@@ -409,7 +406,6 @@ def inset_plot_rec_meas(ax, dict_meas, dict_meas2 = None, dict_err = None, dict_
     2) ``(exp_netmeas, exp_deg) VS (obs_netmeas, obs_deg)'': use dict_meas, dict_meas2 and dict_err, dict_err2 (confidence is provided iff dict_err != None).
     
     """
-    from ..utils.helpers import sum_model_color, ref_model_color
     
     # set errors = 0 not to have errorbars
     err_obs_meas, err_meas2, err_meas3, err_meas4, err_meas5, err_meas6 = np.array([0]*6)
@@ -442,11 +438,11 @@ def inset_plot_rec_meas(ax, dict_meas, dict_meas2 = None, dict_err = None, dict_
             err_meas2, err_meas3, err_meas4, err_meas5, err_meas6 = dict_err2["obs"], dict_err["ref_model"], dict_err2["ref_model"], dict_err["sum_model"], dict_err2["sum_model"]
 
     # observed trends (identity line for the "rec" and behavior "vs_deg" for the other ones)
-    ax.scatter(obs_meas, meas2, marker = obs_marker, c = obs_color, s = obs_ms, label = obs_net_label)
+    ax.scatter(obs_meas, meas2, marker = mpls.obs_marker, c = mpls.obs_color, s = mpls.obs_ms, label = obs_net_label)
 
 
     # among ax.scatter and ax.errorbar if the err_meas3 = 0 as in that case we would be in the "analytical case where we don't approximate the error"
-    ax_scatter_errorbar(ax, meas3, meas4, meas5, meas6, err_meas3, err_meas4, err_meas5, err_meas6, ref_model_color, sum_model_color, ref_model_ms, sum_model_ms, ref_model_label, sum_model_label)
+    ax_scatter_errorbar(ax, meas3, meas4, meas5, meas6, err_meas3, err_meas4, err_meas5, err_meas6, mpls.ref_model_color, mpls.sum_model_color, mpls.ref_model_ms, mpls.sum_model_ms, ref_model_label, sum_model_label)
     
     axis_scale = "log" if np.min(obs_meas) > 0 else "linear"
     ax.set(xlabel = xlabel, ylabel = ylabel, title=f'{inset_title}', xscale = axis_scale, yscale = axis_scale)
@@ -467,8 +463,7 @@ def plots_bin_meas_vs_deg(obs_net, sum_model, ref_model = None, suptitle = None,
     upper triptych: deg (+ p_ij inset), knn, cc;
     lower triptych: ccdf / knn / cc VS deg
     '''
-    from plotting_functions import save_fig
-    import matplotlib.ticker as ticker
+    from .plotting_functions import save_fig
     
     # easy first part only to check if it is already existing the plot we are requiring
     plot_full_path = f"{sum_model.plots_dir}/bin_meas_vs_deg/level{obs_net.level:g}.pdf"

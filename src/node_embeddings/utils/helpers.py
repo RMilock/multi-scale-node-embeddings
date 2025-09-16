@@ -168,42 +168,6 @@ def get_reduced_by(folder_path):
 	return reduced_by[0]
 
 
-# Directed Utils
-
-def check_dim_max_auc(kwargs, model_kwargs):
-	from Directed_Graph import Directed_Graph
-	check_kwargs = kwargs.copy()
-	check_kwargs.update(model_kwargs)
-	fake4dir = Directed_Graph(**check_kwargs)
-	
-	from pathlib import Path
-	par_dir = Path(fake4dir.model_dir).parents[1]
-	dim_pr = par_dir / "dim_max_test_auc_pr.csv"
-	dim_roc = par_dir / "dim_max_test_auc_roc.csv"
-	
-	if dim_pr.exists() or dim_roc.exists():
-		# upload the results
-		dim_pr = np.genfromtxt(dim_pr, delimiter=',')
-		dim_roc = np.genfromtxt(dim_roc, delimiter=',')
-		
-		if dim_pr == dim_roc:
-			return False, dim_pr
-		else:
-			print('-dim_pr \neq dim_roc', dim_pr, dim_roc)
-			return False, dim_pr
-
-def to_tensor(X):
-	""" Convert numpy array to tensor """
-	if not tc.is_tensor(X):
-		return tc.from_numpy(X)
-	return X
-
-def signed_rel_err(x, y):
-	""" Relative error among each element of x and y. It returns an array
-	"""
-	return (x-y) / y
-
-
 def rel_err(x, y):
 	""" Relative error between x and y. It returns a scalar """
 	return np.linalg.norm(x - y) / np.linalg.norm(y)
