@@ -31,7 +31,6 @@ class minimizers():
             # out of the method loop it is possible to save the fitnesses otherwise it won't be overwritten
             # replicate the fitnesses and insert the fully-connected nodes
             if self.get("reduced_by"):
-                print(f'-Insert Final Value of X',)
                 self.X = self.repeat_streq_X(red_X = self.X).reshape(-1, self.dimBCX)
                 self.X = self.set_fcfd_X().reshape(-1, self.dimBCX)
                 
