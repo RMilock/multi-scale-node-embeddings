@@ -60,7 +60,7 @@ def dataset_loader(name, id_code = None, cg_method = "geo-dist", year = 2000, di
 
     # COARSE-GRAINING METHODS   
     if cg_method.startswith(("geo-dist", "rand-dist")):
-        pdtrans.columns = ["payer_int", "beneficiary_int", 'amount_euro']
+        pdtrans.columns = ["payer_int", "beneficiary_int", 'amount']
 
         # define the diminishing rate of nodes from level to level + 1
         n_nodes_0 = nodes_from(pdtrans, id_code = 'int').size

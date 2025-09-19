@@ -378,12 +378,12 @@ def rescale_aic_bic_df(ref_model, models, dims, total_levels, aic_bic_flag = "ai
 
 	return styled_df
 
-def plot_loss_gradn(self, save = True):
+def plot_loss_gradn(self):
 	seed_str = ""
 	if self.__dict__.get('seed') != None: seed_str = f"seed{self.__dict__.get('seed'):g}_"
-	plot_full_path = f"{self.plots_dir}/plot_loss_gradn/level{self.level:g}_{seed_str}plot_loss_gradn.pdf"
+	# plot_full_path = f"{self.plots_dir}/plot_loss_gradn/level{self.level:g}_{seed_str}plot_loss_gradn.pdf"
 
-	if not os.path.exists(plot_full_path):
+	if True: #not os.path.exists(plot_full_path):
 	
 		fig, ax1 = plt.subplots(figsize = (12, 7))
 		ax2 = ax1.twinx()
@@ -415,11 +415,11 @@ def plot_loss_gradn(self, save = True):
 		ax1.set_xlabel("Num of Iterations", fontsize = fontsize)
 		ax1.set_zorder(ax2.get_zorder()+1)  # default zorder is 0 for ax1 and ax2
 		ax1.set_frame_on(False)  # prevents ax1 from hiding ax2
-		ax1.set_xlim(-its_nm[-1]*2e-2,its_nm[-1]*1.13)
+		# ax1.set_xlim(-its_nm[-1]*2e-2,its_nm[-1]*1.13)
 		#ax1.set_xscale("log")
 
-		save_fig(fig, full_path = plot_full_path)
-		plt.close()
+		# save_fig(fig, full_path = plot_full_path)
+		# plt.close()
 
 # plot fitnesses VS GDP
 def plot_grained_fitn(sum_model, ref_model, save_std = False, xscale = "log", yscale = "log", color = mpls.sum_model_color):

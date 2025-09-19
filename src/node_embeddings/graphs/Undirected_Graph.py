@@ -80,7 +80,7 @@ class Undirected_Graph(Graph, variables, param_rearranger, ensemble_ops):
         pdf = pdf.loc[mask_self_loops]
 
         # select only interesting columns
-        pd_payben_id = pdf.loc[:, [f'payer_{self.id_code}', f'beneficiary_{self.id_code}', "amount_euro"]]
+        pd_payben_id = pdf.loc[:, [f'payer_{self.id_code}', f'beneficiary_{self.id_code}', "amount"]]
         pd_payben_id.loc[:, "counts"] = 1
 
         def connected_pd_deg_strength(str_name, pdf):
@@ -88,7 +88,7 @@ class Undirected_Graph(Graph, variables, param_rearranger, ensemble_ops):
             pd_deg_strength =  pdf\
                             .sort_values(str_name)\
                             .groupby([str_name])\
-                            .sum().reset_index(drop = False).loc[:,[str_name, "amount_euro", "counts"]]
+                            .sum().reset_index(drop = False).loc[:,[str_name, "amount", "counts"]]
             mask_disconnected_sl = ~(pd_deg_strength.counts == 0)
             return pd_deg_strength.loc[mask_disconnected_sl]
 

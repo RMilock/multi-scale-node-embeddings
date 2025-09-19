@@ -1,4 +1,4 @@
-payer_int,beneficiary_int,amount_euro
+payer_int,beneficiary_int,amount
 0,4,3.5
 0,5,0.032
 0,8,1.048

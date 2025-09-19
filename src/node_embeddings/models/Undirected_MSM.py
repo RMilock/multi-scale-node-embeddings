@@ -244,7 +244,7 @@ class Undirected_MSM(Undirected_Graph, Graph, top2bot2top, param_rearranger, min
 
         return self.X
 
-    def n_edges_fit(self, obs_net, mic_ext_var, initial_guess = "n_edges_fit"):
+    def n_edges_fit(self, obs_net, initial_guess = 1e-15):
         '''
         Find the (global) parameter delta (x) such that the expected number of edges is equal to the observed one.
         The used strengths are the sum of the microscopic ones and, note, they are greater (or equal) than the strengths at that specific level.
@@ -252,11 +252,7 @@ class Undirected_MSM(Undirected_Graph, Graph, top2bot2top, param_rearranger, min
         '''
 
         from scipy.optimize import fsolve
-        labels = obs_net.mic2mac_int
-        if obs_net.name.endswith("ING"):
-            self.X0 = 1e-20
-        elif obs_net.name.endswith("Gleditsch"):
-            self.X0 = 1e-15
+        self.X0 = initial_guess
 
         # load the strength or GDP and create the external variable matrix s_i @ s_j.T
         ext_var_I = obs_net.stre.reshape(-1, 1)

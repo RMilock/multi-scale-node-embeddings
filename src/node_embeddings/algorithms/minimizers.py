@@ -4,31 +4,38 @@ class minimizers():
     def __init__():
         pass
 
-    def fit(self, A, loss_iters, n_epochs = 20, verbose = False):
+    def fit(self, red_A, obs_net = None, loss_iters = int(1e3), n_epochs = 20, rtol = 1e-8, verbose = False):
         
-        track_nll_opt = True if self.name == "maxlMSM" else False
+        track_nll_opt = True if self.name == "MSM" else False
         
-        self._set_minimizers(A = A, lr = 5e-3, track_nll_opt = track_nll_opt)
+        self._set_minimizers(A = red_A, lr = 5e-3, track_nll_opt = track_nll_opt)
 
-        opt_params = {"n_epochs" : {"adam": n_epochs, "tnc" : n_epochs}}
+        if self.name.startswith("fitn"):
+            _ = self.n_edges_fit(obs_net = obs_net, initial_guess = 1e-15)
 
-        for method in opt_params["n_epochs"]:
-            self.opt_method = method
-            # minimize the NLL for the upper-triangular part of the matrix
-            self.minimize(
-                            n_epochs = opt_params["n_epochs"][method], 
-                            opt_method = method, loss_iters = loss_iters, 
-                            ftol = np.finfo(float).eps, verbose = verbose
-                            )
-            
-        # out of the method loop it is possible to save the fitnesses otherwise it won't be overwritten
-        # replicate the fitnesses and insert the fully-connected nodes
-        if self.get("reduced_by"):
-            print(f'-Insert Final Value of X',)
-            self.X = self.repeat_streq_X(red_X = self.X).reshape(-1, self.dimBCX)
-            self.X = self.set_fcfd_X().reshape(-1, self.dimBCX)
-            
-        _ = self.zl_pmatrix_func(x = self.X, set_w_diag = True)
+        elif self.name.startswith(("degcMSM", "CM")):
+            _ = self.deg_fit()
+
+        elif self.name.startswith("maxlMSM"):
+            opt_params = {"n_epochs" : {"adam": n_epochs, "tnc" : n_epochs}}
+
+            for method in opt_params["n_epochs"]:
+                self.opt_method = method
+                # minimize the NLL for the upper-triangular part of the matrix
+                self.minimize(
+                                n_epochs = opt_params["n_epochs"][method], 
+                                opt_method = method, loss_iters = loss_iters, 
+                                rtol = rtol, verbose = verbose
+                                )
+                
+            # out of the method loop it is possible to save the fitnesses otherwise it won't be overwritten
+            # replicate the fitnesses and insert the fully-connected nodes
+            if self.get("reduced_by"):
+                print(f'-Insert Final Value of X',)
+                self.X = self.repeat_streq_X(red_X = self.X).reshape(-1, self.dimBCX)
+                self.X = self.set_fcfd_X().reshape(-1, self.dimBCX)
+                
+            _ = self.zl_pmatrix_func(x = self.X, set_w_diag = True)
 
     def fun_of_repX(self, X, fun, A):
         """ 
@@ -89,7 +96,7 @@ class minimizers():
             self.losses_list, self.gradn_list,  = [self.nll_X(self.X0)], [np.linalg.norm(self.grad_nll_X(self.X0))]
             self.opt_names, self.opt_final_loss = [], []
 
-    def minimize(self, n_epochs = None, opt_method = None, loss_iters = 200, verbose = False, ftol = 1e-8):
+    def minimize(self, n_epochs = None, opt_method = None, loss_iters = 200, verbose = False, rtol = 1e-8):
 
         from tqdm import trange
 
@@ -116,14 +123,14 @@ class minimizers():
                         X0 = self.X0, #self.mat_to_flat(mat_X = self.X0), 
                         jac = self.grad_nll_X, 
                         verbose = verbose,
-                        ftol = ftol, iters = 1e2, ratio_update_lr = 3,
+                        rtol = rtol, iters = 1e2, ratio_update_lr = 5,
                         )
                 
                 if self.exit_opt:
                     break
 
             else:
-                res = self.scipy_nll_min(opt_method = opt_method, loss_iters=loss_iters, verbose = verbose)
+                res = self.scipy_nll_min(opt_method = opt_method, loss_iters=loss_iters, tol = rtol, verbose = verbose)
                 
                 if not self.nit:
                     curr_gradn = np.linalg.norm(self.grad)
@@ -139,7 +146,7 @@ class minimizers():
             # checking the stopping criteria
             res.x = self._check_decreasing_loss(prev_X, res.x, curr_loss, prev_loss, prev_gradn, \
                                             opt_method=opt_method,
-                                            ratio_update_lr = ratio_update_lr, ftol = ftol, verbose = verbose)
+                                            ratio_update_lr = ratio_update_lr, rtol = rtol, verbose = verbose)
 
             
             if self.exit_opt:
@@ -152,7 +159,7 @@ class minimizers():
         if self.nit > 0 and verbose:
             print(f"\n-Final result for {self.nit_list[-1]} its of {opt_method}")
             # NLL values
-            print(f"\t-prev_loss: {prev_loss:3.8e} ~ curr_loss: {curr_loss:3.8e} --> {(prev_loss - curr_loss) / curr_loss:3.8e}")
+            print(f"\t-prev_loss: {prev_loss:3.8e} ~ curr_loss: {curr_loss:3.8e} --> rtol: {(prev_loss - curr_loss) / curr_loss:3.8e}")
             print(f'\t-prev_gradn: {prev_gradn:3.8e}, curr_gradn: {curr_gradn:3.8e}')
 
         elif self.nit == 0 and verbose:
@@ -173,7 +180,7 @@ class minimizers():
             beta2=0.999,
             eps=1e-8,
             verbose = 0,
-            ftol = 1e-5,
+            rtol = 1e-5,
             ratio_update_lr = 3,
             ):
             """``scipy.optimize.minimize`` compatible implementation of ADAM -
@@ -184,7 +191,7 @@ class minimizers():
 
             from scipy.optimize import OptimizeResult
             
-            X = np.clip(X0, a_min = np.sqrt(ftol), a_max = None)
+            X = np.clip(X0, a_min = np.sqrt(rtol), a_max = None)
             m = np.zeros_like(X)
             v = np.zeros_like(X)
 
@@ -202,14 +209,14 @@ class minimizers():
                 mhat = m / (1 - beta1**(i + 1))  # bias correction.
                 vhat = v / (1 - beta2**(i + 1))
                 X = X - self.learning_rate * mhat / (np.sqrt(vhat) + eps)
-                X = np.clip(X, a_min = ftol, a_max = None)
+                X = np.clip(X, a_min = rtol, a_max = None)
                 
                 # STOPPING CRITERIA PART
                 curr_loss = fun(X)
                 X = self._check_decreasing_loss(prev_X, X, curr_loss, prev_loss, prev_gradn,
                                             opt_method="adam",
                                             ratio_update_lr = ratio_update_lr, \
-                                            ftol = ftol, inner_restart = "Inner ", verbose = verbose)
+                                            rtol = rtol, inner_restart = "Inner ", verbose = verbose)
                 
                 if self.exit_opt:
                     break
@@ -222,15 +229,13 @@ class minimizers():
 
             return res
     
-    def scipy_nll_min(self, opt_method = 'l-bfgs-b', loss_iters = 200, verbose=False,):
+    def scipy_nll_min(self, opt_method = 'l-bfgs-b', loss_iters = 200, tol = 1e-8, verbose=False,):
         
         # print the initial loss and gradn
         if verbose:
             init_jac = self.grad_nll_X(self.X0)
             print(f'\n-Inner solver initial_loss: {self.nll_X(self.X0):.8e}, gradn: {np.linalg.norm(init_jac):.8e}',)
 
-        # fix a tolerance below which the optimization is considered converged and it will be also the lower bound for the fitnesses values
-        tol = np.finfo(float).eps
 
         # set parameters for the optimization
         dict_options = {"ftol":tol, "gtol":tol, }
@@ -325,30 +330,30 @@ class minimizers():
     
     def _check_decreasing_loss(self, prev_X, curr_X, curr_loss, 
                                 prev_loss, prev_gradn, opt_method, 
-                                ratio_update_lr = 3, ftol = 1e-8, inner_restart = "", verbose = False):
+                                ratio_update_lr = 3, rtol = 1e-8, inner_restart = "", verbose = False):
     
         rel_err_loss = (prev_loss - curr_loss) / curr_loss
 
-        if rel_err_loss < ftol:
+        if rel_err_loss < rtol:
 
             if opt_method.startswith("adam"):
                 
                 if verbose:
-                    print(f'-Stop GradDesc: loss {prev_loss:.8e}, gradn {prev_gradn:.8e}, rel_err_loss: {rel_err_loss:.2e} < {ftol:.2e}',)
+                    print(f'-Stop GradDesc: loss {prev_loss:.8e}, gradn {prev_gradn:.8e}, rel_err_loss: {rel_err_loss:.2e} < {rtol:.2e}',)
                 
                 self.learning_rate /= ratio_update_lr
-                if self.learning_rate < ftol:
+                if self.learning_rate < rtol:
 
                     if verbose:
                         # Exit from this iteration if learning rate sufficiently low
-                        print(f'-Exiting as the new learning_rate: {self.learning_rate} < {ftol}',)
+                        print(f'-Exiting as the new learning_rate: {self.learning_rate} < {rtol}',)
                     self.exit_opt = True
                 elif verbose:
                     print(f"\n-{inner_restart}Restart Adam @ it {self.nit_list[-1]} with new self.learning_rate: {self.learning_rate:.5}",)                
             
             else:
                 if verbose:
-                    print(f"\n-Break @ it {self.nit_list[-1]} due to rel_err_loss: {rel_err_loss:.2e} < {ftol:.2e}")
+                    print(f"\n-Break @ it {self.nit_list[-1]} due to rel_err_loss: {rel_err_loss:.2e} < {rtol:.2e}")
                 self.exit_opt = True
                 
             return prev_X

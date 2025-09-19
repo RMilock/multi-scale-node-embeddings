@@ -352,7 +352,7 @@ class Graph():
             col = edges_id("beneficiary")
             
             # extract the data and the binary data
-            data = pdf["amount_euro"].values
+            data = pdf["amount"].values
             # bin_data = 1*len(data)
 
             return data, (row, col)
@@ -474,7 +474,9 @@ class Graph():
             #     tc.save(var, path)
             elif format_ == "csv":
                 fmt='%i'
-                if np.any(var % 1.):
+                if np.any(var == np.inf):
+                    fmt='%.18e'
+                elif np.any(var % 1.):
                     fmt='%.18e'
                 if np.isscalar(var):
                     var = np.array([var])
