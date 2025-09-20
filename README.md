@@ -15,9 +15,8 @@ Note: to extend the methods to the directed case, rely on the same pipeline, whi
 ------------
 Install from build:
 
-python3 -m venv .venv
-pip3 install --editable . --config-settings editable_mode=compat
-
+    python3 -m venv .venv
+    pip3 install --editable . --config-settings editable_mode=compat
 
 ## Development
 -----------
