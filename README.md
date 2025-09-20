@@ -1,4 +1,4 @@
-# Multi-Scale-Node-Embeddings
+# MUlti-Scale-node-Embeddings (MUSE)
 ## Description:
 This package contains a set of methods to calculate:
 
@@ -9,9 +9,11 @@ See "Multi-Scale Node Embeddings for Graph Modeling and Generation" [arXiv](http
 
 Feel free to reach out at [riccardo.milocco@imtlucca.it](mailto:riccardo.milocco@imtlucca.it) or [riccardo.milocco@gmail.com](mailto:riccardo.milocco@gmail.com), for code refinement, feedback, or collaborations.
 
+Note: to extend the methods to the directed case, rely on the same pipeline, while doubling the number of parameters: instead of having only one parameter per node X, use X and Y that, then, will be interpreted as the ``propensity'' of sending a message/interaction and receiving it resp.).
+
 ## Installation
 ------------
-Install using:
+Install from build:
 
 python3 -m venv .venv
 pip3 install --editable . --config-settings editable_mode=compat
